@@ -24,23 +24,15 @@ export default function RegisterPage() {
         {/* Sidebar - Left Side */}
         <div className="hidden lg:flex lg:w-[450px] xl:w-[529px] relative flex-col bg-gradient-to-b from-[#2563eb] from-[20.673%] to-[#14cb72] p-8 xl:p-[50px] text-white overflow-hidden shrink-0 min-h-screen">
             {/* Logo Section */}
-            <div className="flex items-center gap-[10px] mb-12 xl:mb-[60px] relative z-10">
-                <div className="w-[85px] h-[46px] relative flex items-center justify-center bg-white/10 rounded-lg">
+            <div className="flex items-center mb-12 xl:mb-[60px] relative z-10">
+                <div className="w-[150px] h-[60px] relative">
                     <Image
-                        src={imgUpvanceLogo}
+                        src="/Logo.png"
                         alt="Logo"
                         fill
                         className="object-contain"
-                        onError={(e) => {
-                            // Fallback if image fails to load
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                        }}
                     />
-                    {/* CSS Fallback Logo */}
-                    <div className="w-8 h-8 bg-white rounded-full opacity-20 absolute" />
                 </div>
-                <span className="text-[36px] font-semibold tracking-tight leading-[44px]">Upvance</span>
             </div>
 
             {/* Hero Text */}

@@ -11,12 +11,6 @@ import {
   Apple
 } from "lucide-react";
 
-// Figma Assets (Remote URLs as Primary)
-const imgVector = "https://www.figma.com/api/mcp/asset/627f020b-b22c-4182-a801-2b5d2c08f263";
-const imgUpvanceLogo = "https://www.figma.com/api/mcp/asset/92dbae1e-7242-45b4-83c1-4247d0739526";
-const imgLine3 = "https://www.figma.com/api/mcp/asset/5f44a310-d154-4229-b853-a37203256814";
-const imgDeviconGoogle = "https://www.figma.com/api/mcp/asset/50459e7e-3668-4f25-b3ee-c65fd96fea52";
-
 export default function LoginPage() {
   return (
     <div className="min-h-screen w-full flex bg-[#F8FAFC] overflow-x-hidden font-['Inter',sans-serif] items-center justify-center">
@@ -25,23 +19,10 @@ export default function LoginPage() {
         {/* Sidebar - Left Side */}
         <div className="hidden lg:flex lg:w-[450px] xl:w-[529px] relative flex-col bg-gradient-to-b from-[#2563eb] from-[20.673%] to-[#14cb72] p-8 xl:p-[50px] text-white overflow-hidden shrink-0 min-h-screen">
             {/* Logo Section */}
-            <div className="flex items-center gap-[10px] mb-12 xl:mb-[60px] relative z-10">
-                <div className="w-[85px] h-[46px] relative flex items-center justify-center bg-white/10 rounded-lg">
-                    <Image
-                        src={imgUpvanceLogo}
-                        alt="Logo"
-                        fill
-                        className="object-contain"
-                        onError={(e) => {
-                            // Fallback if image fails to load
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                        }}
-                    />
-                    {/* CSS Fallback Logo */}
-                    <div className="w-8 h-8 bg-white rounded-full opacity-20 absolute" />
+            <div className="flex items-center mb-12 xl:mb-[60px] relative z-10">
+                <div className="w-[150px] h-[60px] relative">
+                    <Image src="/Logo.png" alt="Upvance Logo" fill className="object-contain" />
                 </div>
-                <span className="text-[36px] font-semibold tracking-tight leading-[44px]">Upvance</span>
             </div>
 
             {/* Hero Text */}
@@ -89,7 +70,6 @@ export default function LoginPage() {
                     alt="Background"
                     fill
                     className="object-cover"
-                    priority
                     unoptimized
                 />
             </div>
@@ -127,12 +107,14 @@ export default function LoginPage() {
                     </div>
 
                     <div className="space-y-[17px] mt-[32px]">
-                        <button
-                            type="submit"
-                            className="w-full h-[40px] bg-white text-black font-bold text-[12px] rounded-[50px] shadow-[0px_1px_2px_rgba(0,0,0,0.25)] hover:bg-gray-50 transition-all active:scale-[0.98]"
-                        >
-                            Masuk
-                        </button>
+                        <Link href="/dashboard" className="block w-full">
+                            <button
+                                type="button"
+                                className="w-full h-[40px] bg-white text-black font-bold text-[12px] rounded-[50px] shadow-[0px_1px_2px_rgba(0,0,0,0.25)] hover:bg-gray-50 transition-all active:scale-[0.98]"
+                            >
+                                Masuk
+                            </button>
+                        </Link>
 
                         <div className="flex items-center gap-[17px]">
                             <div className="h-[1px] flex-1 bg-black/10" />
@@ -149,17 +131,15 @@ export default function LoginPage() {
                             
                             <div className="grid grid-cols-2 gap-4">
                                 <button className="h-[40px] flex items-center justify-center gap-[10px] bg-white rounded-[50px] shadow-[0px_1px_2px_rgba(0,0,0,0.25)] hover:bg-gray-50 transition-all">
-                                    <div className="w-[20px] h-[20px] relative flex items-center justify-center">
-                                        <Image src={imgDeviconGoogle} alt="Google" fill className="object-contain" />
-                                        <div className="w-4 h-4 bg-red-400 rounded-full opacity-20 absolute" />
+                                    <div className="w-[20px] h-[20px] relative flex items-center justify-center bg-red-100 rounded-full">
+                                        <span className="text-red-500 font-bold text-sm">G</span>
                                     </div>
                                     <span className="text-[12px] font-normal text-black">Google</span>
                                 </button>
 
                                 <button className="h-[40px] flex items-center justify-center gap-[10px] bg-white rounded-[50px] shadow-[0px_1px_2px_rgba(0,0,0,0.25)] hover:bg-gray-50 transition-all">
-                                    <div className="w-[20px] h-[20px] relative flex items-center justify-center">
-                                        <Image src={imgVector} alt="Apple" fill className="object-contain" />
-                                        <Apple className="w-4 h-4 text-black/50 absolute" />
+                                    <div className="w-[20px] h-[20px] relative flex items-center justify-center bg-black rounded-full">
+                                        <Apple className="w-3.5 h-3.5 text-white" />
                                     </div>
                                     <span className="text-[12px] font-normal text-black">Apple</span>
                                 </button>

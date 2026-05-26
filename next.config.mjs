@@ -4,14 +4,23 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'figma.com',
+      },
+      {
+        protocol: 'https',
         hostname: 'www.figma.com',
-        pathname: '/api/mcp/asset/**',
       },
       {
         protocol: 'https',
         hostname: 'www.google.com',
       }
     ],
+    unoptimized: false,
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
   },
 };
 
