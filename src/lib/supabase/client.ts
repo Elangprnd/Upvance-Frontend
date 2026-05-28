@@ -1,8 +1,8 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { Database } from '../../types'
+import { Database } from '../../types/'
 
 export const createClient = () =>
   createBrowserClient<Database>(
-    'https://kmhfilbxwskbynjeuwld.supabase.co',
-    'sb_publishable_2Mvlh7fUsOgt0ETMEbIdvA_oK-IvTJJ'
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
