@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: 'https',
@@ -9,8 +12,22 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'www.figma.com',
+        pathname: '/**',
       },
       {
+        // Foto profil Google OAuth
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        // Supabase Storage
+        protocol: 'https',
+        hostname: 'kmhfilbxwskbynjeuwld.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        // Foto profil Google OAuth (fallback domain)
         protocol: 'https',
         hostname: 'www.google.com',
       }

@@ -21,7 +21,6 @@ interface EventCardProps {
   category?: string;
 }
 
-const imgCoin = "https://www.figma.com/api/mcp/asset/fe6c7d9f-96d7-4c16-a18a-8f37f6799092";
 
 export default function EventCard({
   id,
@@ -42,7 +41,7 @@ export default function EventCard({
     <div className="bg-white rounded-[20px] shadow-[0px_0px_15px_0px_rgba(0,0,0,0.25)] overflow-hidden w-[306px] h-[616px] flex flex-col relative group">
       {/* Event Image */}
       <div className="relative w-[271px] h-[361px] mx-auto mt-[18px] rounded-[20px] overflow-hidden bg-gray-200">
-        <Image src={image} alt={title} fill className="object-cover" />
+        <Image src={image} alt={title} fill className="object-cover" sizes="271px" />
         
         {/* Tags Overlay */}
         <div className="absolute top-2 left-2 flex gap-1">
@@ -97,9 +96,7 @@ export default function EventCard({
         {/* Price & Deadline */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-1">
-            <div className="relative w-[18px] h-[18px]">
-               <Image src={imgCoin} alt="coin" fill className="object-contain" />
-            </div>
+            <CircleDollarSign className="w-[16px] h-[16px] text-[#2563eb]" />
             <span className="text-[10px] font-bold text-[#0e0e0f]">{price}</span>
           </div>
           <span className="text-[10.5px] font-bold text-[#dc2626]">Deadline: {deadline}</span>
@@ -111,7 +108,9 @@ export default function EventCard({
         {/* Organizer */}
         <div className="flex items-center gap-3 relative">
           <div className="w-[49px] h-[54px] relative bg-gray-100 rounded overflow-hidden">
-            {organizerLogo && <Image src={organizerLogo} alt={organizer} fill className="object-contain" />}
+            {organizerLogo && (
+              <Image src={organizerLogo} alt={organizer} fill className="object-contain" sizes="49px" />
+            )}
           </div>
           <div className="flex flex-col">
             <span className="text-[13px] font-bold text-[#bababa]">Diselenggarakan Oleh</span>
