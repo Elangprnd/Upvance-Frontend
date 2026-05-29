@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     const { error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update(updates as never)
       .eq('id', user.id)
 
     if (error) throw error

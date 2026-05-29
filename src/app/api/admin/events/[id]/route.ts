@@ -9,7 +9,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if ((profile as any)?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { data, error } = await supabase.from('events').delete().eq('id', params.id).select()
     if (error) throw error
@@ -31,10 +31,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if ((profile as any)?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()
-    const { data, error } = await supabase.from('events').update(body).eq('id', params.id).select()
+    const { data, error } = await supabase.from('events').update(body as never).eq('id', params.id).select()
     if (error) throw error
     if (!data || data.length === 0) {
       return NextResponse.json({ error: 'Gagal memperbarui event (Dicegah oleh aturan RLS)' }, { status: 403 })

@@ -107,9 +107,9 @@ export async function POST(request: NextRequest) {
     type ProfileRow = Database['public']['Tables']['profiles']['Row']
     const userProfile = profile as ProfileRow | null
 
-    const userRole = userProfile?.role ?? 'user'
-    const fullName = userProfile?.full_name ?? (data.user.user_metadata?.full_name as string | null) ?? null
-    const avatarUrl = userProfile?.avatar_url ?? null
+    const userRole = (userProfile as any)?.role ?? 'user'
+    const fullName = (userProfile as any)?.full_name ?? (data.user.user_metadata?.full_name as string | null) ?? null
+    const avatarUrl = (userProfile as any)?.avatar_url ?? null
 
     return NextResponse.json({
       data: {

@@ -35,7 +35,7 @@ const ALL_CATEGORIES: { label: string; value: EventCategory; color: string; segm
 const GREEN_CATEGORIES: EventCategory[] = ["Volunteer", "Greenvity"];
 const UMUM_CATEGORIES: EventCategory[] = ALL_CATEGORIES.filter(c => c.segment === "umum").map(c => c.value);
 
-export function DashboardContent() {
+function DashboardContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
 

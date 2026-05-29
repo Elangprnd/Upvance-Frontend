@@ -38,14 +38,14 @@ export async function GET(request: NextRequest) {
           avatar_url: avatarUrl,
           role: 'user',
           has_completed_onboarding: false,
-        })
+        } as never)
 
         // User baru → onboarding
         return NextResponse.redirect(new URL('/onboarding', origin).toString())
       }
 
       // User sudah ada: cek apakah onboarding sudah selesai
-      if (!profile.has_completed_onboarding) {
+      if (!(profile as any).has_completed_onboarding) {
         return NextResponse.redirect(new URL('/onboarding', origin).toString())
       }
 

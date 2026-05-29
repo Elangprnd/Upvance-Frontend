@@ -9,7 +9,7 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if ((profile as any)?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { data, error } = await supabase
       .from('events')
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if ((profile as any)?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()
     const { title, category, location, is_online, is_free, price, start_date, deadline, event_url, description, image_url } = body
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       is_verified: true,
       is_featured: false,
       organizer_id: null,
-    }).select('id').single()
+    } as never).select('id').single()
 
     if (error) throw error
     return NextResponse.json({ data, success: true })

@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     if (error) throw error
 
     // Filter hanya event yang masih published
-    const validBookmarks = (data ?? []).filter(b => b.event && (b.event as { is_published?: boolean }).is_published !== false)
+    const validBookmarks = (data ?? []).filter(b => (b as any).event && ((b as any).event as { is_published?: boolean }).is_published !== false)
 
     return NextResponse.json({ data: validBookmarks, error: null })
   } catch (err) {
@@ -73,13 +73,13 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     if (existing) {
-      await supabase.from('bookmarks').delete().eq('id', existing.id)
+      await supabase.from('bookmarks').delete().eq('id', (existing as any).id)
       return NextResponse.json({ bookmarked: false, message: 'Bookmark dihapus' })
     } else {
       const { error } = await supabase.from('bookmarks').insert({
         profile_id: user.id,
         event_id,
-      })
+      } as never)
       if (error) throw error
       return NextResponse.json({ bookmarked: true, message: 'Event di-bookmark' })
     }
