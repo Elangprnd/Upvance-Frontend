@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { eventsData } from "@/lib/eventsData";
 
-const imgCoin = "https://www.figma.com/api/mcp/asset/e2831db7-c4f9-4a87-8496-31ceb6bc1071";
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -61,6 +60,7 @@ export default function EventDetailPage() {
                 fill 
                 className="object-cover"
                 priority
+                sizes="(max-width: 1024px) 100vw, 403px"
               />
             </div>
           </div>
@@ -118,9 +118,7 @@ export default function EventDetailPage() {
               <div className="flex flex-col gap-2">
                 <span className="text-[16px] font-bold text-[#161616]">Pembayaran</span>
                 <div className="flex items-center gap-2 text-[#0e0e0f]">
-                  <div className="relative w-6 h-6">
-                     <Image src={imgCoin} alt="coin" fill className="object-contain" />
-                  </div>
+                  <CircleDollarSign className="w-6 h-6 text-[#2563eb]" />
                   <span className="text-[13px] font-medium">{event.price}</span>
                 </div>
               </div>
