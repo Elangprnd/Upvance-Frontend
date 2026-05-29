@@ -1,34 +1,25 @@
-import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+import { optimizeCookies } from './lib/supabase/cookie-optimizer'
 
-// ============================================================================
-// ROUTE CONFIGURATION
-// ============================================================================
-// Menggunakan struktur data Set untuk pencarian rute O(1) yang efisien memori.
-const AUTH_ROUTES = new Set(['/login', '/register', '/verify-otp'])
-const PROTECTED_PREFIXES = ['/dashboard', '/main', '/settings']
+const AUTH_ROUTES = new Set([
+  '/login', '/register', '/verify-otp', '/forgot-password', '/reset-password',
+])
+const PROTECTED_PREFIXES = ['/main', '/settings', '/admin', '/onboarding', '/bookmarks']
 
 export async function middleware(request: NextRequest) {
-  const url = request.nextUrl.clone()
-  const path = url.pathname
+  const { pathname } = request.nextUrl
 
-  // 1. INISIALISASI RESPONSE & HTTP SECURITY HEADERS
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+  const isAuthRoute = AUTH_ROUTES.has(pathname)
+  const isProtectedRoute = PROTECTED_PREFIXES.some(p => pathname.startsWith(p))
+
+  let supabaseResponse = NextResponse.next({
+    request,
   })
 
-  // Mencegah eksploitasi Clickjacking melalui penyematan iframe eksternal.
-  response.headers.set('X-Frame-Options', 'DENY')
-  // Mencegah eksploitasi MIME-type sniffing oleh peramban.
-  response.headers.set('X-Content-Type-Options', 'nosniff')
-  // Membatasi kebocoran informasi referrer saat melakukan navigasi cross-origin.
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  // Mengaktifkan filter XSS bawaan peramban (browser).
-  response.headers.set('X-XSS-Protection', '1; mode=block')
+  const projectId = process.env.NEXT_PUBLIC_SUPABASE_URL!.split('//')[1].split('.')[0]
+  const chunkPrefix = `sb-${projectId}-auth-token`
 
-  // 2. INISIALISASI SUPABASE CLIENT (Manajemen Sesi Edge)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -38,55 +29,57 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          // Melakukan sinkronisasi cookie ke instance respons baru.
-          response = NextResponse.next({
-            request: { headers: request.headers },
+          const optimized = optimizeCookies(cookiesToSet, chunkPrefix)
+          
+          // Update request cookies
+          optimized.forEach(({ name, value }) => request.cookies.set(name, value))
+          // Update response
+          supabaseResponse = NextResponse.next({
+            request,
           })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+          // Apply cookies to response
+          optimized.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
           )
         },
       },
     }
   )
 
-  // 3. VALIDASI AUTENTIKASI SERVER-SIDE
-  // Menggunakan getUser() untuk memvalidasi token secara real-time ke basis data,
-  // guna mencegah penggunaan token yang sudah di-revoke atau kedaluwarsa.
-  const { data: { user } } = await supabase.auth.getUser()
 
-  // 4. KONTROL AKSES RUTE (ACCESS CONTROL LOGIC)
-  const isAuthRoute = AUTH_ROUTES.has(path)
-  const isProtectedRoute = PROTECTED_PREFIXES.some(prefix => path.startsWith(prefix))
+  // 3. Ambil session (TIDAK get user untuk menghindari refresh berlebihan di setiap request publik)
+  // Untuk rute yang butuh proteksi ketat (role check), gunakan getUser() di dalam route handler.
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user ?? null
 
-  // Kondisi A: Pengguna belum terautentikasi mencoba mengakses rute terproteksi.
+  // 4. Access Control
   if (!user && isProtectedRoute) {
-    url.pathname = '/login'
-    // Menyimpan path tujuan akhir untuk redirect otomatis pasca-login (mendukung retensi UX).
-    url.searchParams.set('next', path)
-    return NextResponse.redirect(url)
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('next', pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
-  // Kondisi B: Pengguna telah terautentikasi mencoba mengakses halaman pendaftaran/masuk.
   if (user && isAuthRoute) {
-    url.pathname = '/dashboard'
-    url.searchParams.delete('next')
-    return NextResponse.redirect(url)
+    const rawNext = request.nextUrl.searchParams.get('next') ?? ''
+    const safeDest =
+      rawNext.startsWith('/') && !rawNext.startsWith('//') && !AUTH_ROUTES.has(rawNext)
+        ? rawNext
+        : '/dashboard'
+    return NextResponse.redirect(new URL(safeDest, request.url))
   }
 
-  return response
+  // 5. Kembalikan response yang di-sync Supabase
+  // Pastikan keamanan dasar:
+  supabaseResponse.headers.set('X-Frame-Options', 'DENY')
+  supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
+  supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  supabaseResponse.headers.set('X-XSS-Protection', '1; mode=block')
+
+  return supabaseResponse
 }
 
-// ============================================================================
-// MATCHER CONFIGURATION
-// ============================================================================
-// Middleware ini secara eksplisit mengecualikan file statis, aset Next.js, dan 
-// endpoint API internal untuk meminimalisasi latensi eksekusi pada level Edge server.
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|api/|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)',
   ],
 }

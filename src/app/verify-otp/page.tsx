@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, MailCheck } from "lucide-react";
 import AuthSidebar from "@/components/organism/AuthSidebar";
+import { createClient } from "@/lib/supabase/client";
 
 const OTP_LENGTH = 8;
 
@@ -111,7 +112,25 @@ function VerifyOTPContent() {
       }
 
       setSuccess(true);
-      setTimeout(() => router.push("/dashboard"), 2000);
+      // Cek onboarding status — user baru harus ke /onboarding dulu
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("has_completed_onboarding")
+            .eq("id", user.id)
+            .maybeSingle();
+          setTimeout(() => {
+            router.push(profile?.has_completed_onboarding ? "/dashboard" : "/onboarding");
+          }, 1500);
+        } else {
+          setTimeout(() => router.push("/onboarding"), 1500);
+        }
+      } catch {
+        setTimeout(() => router.push("/onboarding"), 1500);
+      }
     } catch {
       setError("Gagal terhubung ke server. Periksa koneksi internet kamu.");
       setIsLoading(false);

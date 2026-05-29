@@ -13,7 +13,20 @@ export interface Database {
         Row: {
           id: string
           full_name: string | null
+          username: string | null
           avatar_url: string | null
+          bio: string | null
+          phone_number: string | null
+          linkedin_url: string | null
+          portfolio_url: string | null
+          institution: string | null
+          major: string | null
+          semester: number | null
+          interests: string[] | null
+          goals: string[] | null
+          has_completed_onboarding: boolean
+          account_type: string
+          points: number
           role: 'user' | 'organizer' | 'admin'
           created_at: string
           updated_at: string
@@ -21,7 +34,20 @@ export interface Database {
         Insert: {
           id: string
           full_name?: string | null
+          username?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          phone_number?: string | null
+          linkedin_url?: string | null
+          portfolio_url?: string | null
+          institution?: string | null
+          major?: string | null
+          semester?: number | null
+          interests?: string[] | null
+          goals?: string[] | null
+          has_completed_onboarding?: boolean
+          account_type?: string
+          points?: number
           role?: 'user' | 'organizer' | 'admin'
           created_at?: string
           updated_at?: string
@@ -29,7 +55,20 @@ export interface Database {
         Update: {
           id?: string
           full_name?: string | null
+          username?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          phone_number?: string | null
+          linkedin_url?: string | null
+          portfolio_url?: string | null
+          institution?: string | null
+          major?: string | null
+          semester?: number | null
+          interests?: string[] | null
+          goals?: string[] | null
+          has_completed_onboarding?: boolean
+          account_type?: string
+          points?: number
           role?: 'user' | 'organizer' | 'admin'
           created_at?: string
           updated_at?: string
@@ -73,7 +112,7 @@ export interface Database {
           organizer_id: string | null
           title: string
           slug: string | null
-          category: 'Lomba' | 'Seminar' | 'Workshop' | 'Beasiswa' | 'Magang' | 'Webinar' | 'Lainnya'
+          category: 'Lomba' | 'Seminar' | 'Workshop' | 'Beasiswa' | 'Magang' | 'Webinar' | 'Volunteer' | 'Greenvity' | 'Lainnya'
           description: string | null
           image_url: string | null
           event_url: string | null
@@ -95,7 +134,7 @@ export interface Database {
           organizer_id?: string | null
           title: string
           slug?: string | null
-          category: 'Lomba' | 'Seminar' | 'Workshop' | 'Beasiswa' | 'Magang' | 'Webinar' | 'Lainnya'
+          category: 'Lomba' | 'Seminar' | 'Workshop' | 'Beasiswa' | 'Magang' | 'Webinar' | 'Volunteer' | 'Greenvity' | 'Lainnya'
           description?: string | null
           image_url?: string | null
           event_url?: string | null
@@ -117,7 +156,7 @@ export interface Database {
           organizer_id?: string | null
           title?: string
           slug?: string | null
-          category?: 'Lomba' | 'Seminar' | 'Workshop' | 'Beasiswa' | 'Magang' | 'Webinar' | 'Lainnya'
+          category?: 'Lomba' | 'Seminar' | 'Workshop' | 'Beasiswa' | 'Magang' | 'Webinar' | 'Volunteer' | 'Greenvity' | 'Lainnya'
           description?: string | null
           image_url?: string | null
           event_url?: string | null

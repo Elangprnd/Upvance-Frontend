@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2, KeyRound } from "lucide-react";
+import { Eye, EyeOff, Loader2, KeyRound, AlertCircle } from "lucide-react";
 import AuthSidebar from "@/components/organism/AuthSidebar";
+import { createClient } from "@/lib/supabase/client";
 
 function PasswordStrengthBar({ password }: { password: string }) {
   const getStrength = () => {
@@ -52,6 +53,65 @@ function ResetPasswordContent() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // State untuk session recovery dari hash fragment
+  const [sessionReady, setSessionReady] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+
+  // Saat halaman dimuat, baca hash fragment dari URL yang dikirim Supabase
+  // Format: /reset-password#access_token=xxx&refresh_token=yyy&type=recovery
+  useEffect(() => {
+    const handleHashSession = async () => {
+      const hash = window.location.hash;
+      if (!hash || hash.length < 2) {
+        // Tidak ada hash — cek apakah sudah ada session aktif
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setSessionReady(true);
+        } else {
+          setSessionError(
+            "Link reset sudah kedaluwarsa atau tidak valid. Silakan minta link reset ulang."
+          );
+        }
+        return;
+      }
+
+      // Parse hash fragment
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      const type = params.get("type");
+
+      if (type !== "recovery" || !accessToken || !refreshToken) {
+        setSessionError(
+          "Link reset tidak valid. Silakan minta link reset ulang dari halaman Lupa Kata Sandi."
+        );
+        return;
+      }
+
+      // Set session menggunakan token dari hash
+      const supabase = createClient();
+      const { error: sessionErr } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      if (sessionErr) {
+        console.error("[reset-password] setSession error:", sessionErr.message);
+        setSessionError(
+          "Sesi recovery gagal. Link mungkin sudah kedaluwarsa. Silakan minta link reset ulang."
+        );
+        return;
+      }
+
+      // Bersihkan hash dari URL agar tidak terlihat oleh user
+      window.history.replaceState(null, "", window.location.pathname);
+      setSessionReady(true);
+    };
+
+    handleHashSession();
+  }, []);
+
   const inputClass =
     "w-full h-[40px] px-[20px] bg-white rounded-[50px] shadow-[0px_1px_2px_rgba(0,0,0,0.25)] border border-transparent focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 outline-none text-[12px] text-black placeholder:text-black/50 transition-all";
 
@@ -94,6 +154,57 @@ function ResetPasswordContent() {
       setIsLoading(false);
     }
   };
+
+  // State: Session error (link expired / invalid)
+  if (sessionError) {
+    return (
+      <div className="min-h-screen w-full flex bg-[#F8FAFC] overflow-x-hidden font-['Inter',sans-serif]">
+        <div className="flex-1 lg:flex-none w-full lg:max-w-full flex min-h-screen relative overflow-hidden">
+          <AuthSidebar />
+          <div className="flex-1 relative flex items-center justify-center p-6 lg:p-12 overflow-hidden bg-white min-h-screen">
+            <div className="absolute inset-0 z-0">
+              <Image src="/background-auth.png" alt="Background" fill className="object-cover" priority sizes="(max-width: 1024px) 100vw, 60vw" />
+            </div>
+            <div className="w-full max-w-[450px] bg-[#D9D9D9]/80 backdrop-blur-xl rounded-[25px] p-8 md:p-12 shadow-[0px_40px_40px_0px_rgba(0,0,0,0.24),0px_10px_22px_0px_rgba(0,0,0,0.27)] relative z-10 flex flex-col items-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-5">
+                <AlertCircle className="w-8 h-8 text-red-500" />
+              </div>
+              <h2 className="text-[24px] font-bold text-center text-black mb-2">Link Tidak Valid</h2>
+              <p className="text-[13px] text-black/60 text-center mb-6 max-w-[280px]">{sessionError}</p>
+              <Link href="/forgot-password" className="block w-full max-w-[301px]">
+                <button type="button" className="w-full h-[40px] bg-white text-black font-bold text-[12px] rounded-[50px] shadow-[0px_1px_2px_rgba(0,0,0,0.25)] hover:bg-gray-50 transition-all active:scale-[0.98]">
+                  Minta Link Baru
+                </button>
+              </Link>
+              <Link href="/login" className="mt-3 text-[12px] text-black/60 hover:text-blue-600 hover:underline transition-colors">
+                ← Kembali ke Login
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // State: Loading session
+  if (!sessionReady) {
+    return (
+      <div className="min-h-screen w-full flex bg-[#F8FAFC] overflow-x-hidden font-['Inter',sans-serif]">
+        <div className="flex-1 lg:flex-none w-full lg:max-w-full flex min-h-screen relative overflow-hidden">
+          <AuthSidebar />
+          <div className="flex-1 relative flex items-center justify-center p-6 lg:p-12 overflow-hidden bg-white min-h-screen">
+            <div className="absolute inset-0 z-0">
+              <Image src="/background-auth.png" alt="Background" fill className="object-cover" priority sizes="(max-width: 1024px) 100vw, 60vw" />
+            </div>
+            <div className="w-full max-w-[450px] bg-[#D9D9D9]/80 backdrop-blur-xl rounded-[25px] p-8 md:p-12 shadow-[0px_40px_40px_0px_rgba(0,0,0,0.24),0px_10px_22px_0px_rgba(0,0,0,0.27)] relative z-10 flex flex-col items-center">
+              <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+              <p className="text-[13px] text-black/60 text-center">Memverifikasi link reset password...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full flex bg-[#F8FAFC] overflow-x-hidden font-['Inter',sans-serif]">

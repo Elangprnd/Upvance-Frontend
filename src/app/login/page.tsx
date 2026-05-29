@@ -1,16 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import AuthSidebar from "@/components/organism/AuthSidebar";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || "/dashboard";
+  // Validasi 'next' param — jangan redirect ke halaman auth itu sendiri (loop prevention)
+  const AUTH_ROUTE_SET = new Set(['/login', '/register', '/verify-otp', '/forgot-password', '/reset-password'])
+  const rawNext = searchParams.get("next") || ""
+  const nextPath = (rawNext.startsWith('/') && !rawNext.startsWith('//') && !AUTH_ROUTE_SET.has(rawNext))
+    ? rawNext
+    : "/dashboard"
+
+  // Pesan khusus ketika session di-reset akibat overflow cookie
+  const sessionReset = searchParams.get("reason") === "session_reset"
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -60,9 +68,8 @@ export default function LoginPage() {
         return;
       }
 
-      // Login berhasil → redirect ke halaman tujuan
-      router.push(nextPath);
-      router.refresh(); // Refresh untuk update session di server components
+      // Login berhasil → redirect (router.replace tidak menambah history entry)
+      router.replace(nextPath);
     } catch {
       setError("Gagal terhubung ke server. Periksa koneksi internet kamu.");
       setIsLoading(false);
@@ -74,7 +81,7 @@ export default function LoginPage() {
   };
 
   const inputClass =
-    "w-full h-[40px] px-[20px] bg-white rounded-[50px] shadow-[0px_1px_2px_rgba(0,0,0,0.25)] border border-transparent focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 outline-none text-[12px] text-black placeholder:text-black/50 transition-all";
+    "w-full h-[46px] px-[20px] bg-white rounded-[12px] border border-gray-200 focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10 outline-none text-[14px] text-gray-900 placeholder:text-gray-400 transition-all";
 
   return (
     <div className="min-h-screen w-full flex bg-[#F8FAFC] overflow-x-hidden font-['Inter',sans-serif]">
@@ -102,10 +109,19 @@ export default function LoginPage() {
           <div className="absolute top-[8%] left-[10%] w-[18vw] max-w-[300px] aspect-square bg-gradient-to-bl from-green-400/10 to-transparent rounded-full blur-3xl pointer-events-none z-0" />
 
           {/* Login Card */}
-          <div className="w-full max-w-[450px] bg-[#D9D9D9]/80 backdrop-blur-xl rounded-[25px] p-8 md:p-12 shadow-[0px_40px_40px_0px_rgba(0,0,0,0.24),0px_10px_22px_0px_rgba(0,0,0,0.27)] relative z-10 flex flex-col items-center">
-            <h2 className="text-[24px] font-bold text-center text-black mb-[32px]">
+          <div className="w-full max-w-[450px] bg-white/90 backdrop-blur-2xl border border-white/50 rounded-[24px] p-8 md:p-12 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] relative z-10 flex flex-col items-center">
+            <h2 className="text-[26px] font-bold text-center text-gray-900 mb-8">
               Masuk ke Akun Anda
             </h2>
+
+            {/* Session reset banner */}
+            {sessionReset && (
+              <div className="w-full max-w-[301px] bg-amber-50 border border-amber-200 rounded-[10px] px-3 py-2 mb-3">
+                <p className="text-[11px] text-amber-700 text-center">
+                  Sesi kamu di-reset karena ukuran cookie terlalu besar. Silakan login kembali.
+                </p>
+              </div>
+            )}
 
             {/* OAuth Error Banner */}
             {(oauthError || error) && (
@@ -177,7 +193,7 @@ export default function LoginPage() {
                   type="submit"
                   id="login-submit"
                   disabled={isLoading}
-                  className="w-full h-[40px] bg-white text-black font-bold text-[12px] rounded-[50px] shadow-[0px_1px_2px_rgba(0,0,0,0.25)] hover:bg-gray-50 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full h-[46px] bg-[#2563eb] text-white font-bold text-[14px] rounded-[12px] hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_14px_0_rgba(37,99,235,0.39)]"
                 >
                   {isLoading ? (
                     <>
@@ -198,7 +214,7 @@ export default function LoginPage() {
                 <Link href="/register" className="block w-full">
                   <button
                     type="button"
-                    className="w-full h-[40px] bg-white text-black font-bold text-[12px] rounded-[50px] shadow-[0px_1px_2px_rgba(0,0,0,0.25)] hover:bg-gray-50 transition-all active:scale-[0.98]"
+                    className="w-full h-[46px] bg-white text-gray-700 border border-gray-200 font-bold text-[14px] rounded-[12px] hover:bg-gray-50 hover:text-gray-900 transition-all active:scale-[0.98]"
                   >
                     Belum punya akun? Daftar
                   </button>
@@ -210,24 +226,24 @@ export default function LoginPage() {
                     type="button"
                     id="login-google"
                     onClick={handleGoogleLogin}
-                    className="h-[40px] flex items-center justify-center gap-[8px] bg-white rounded-[50px] shadow-[0px_1px_2px_rgba(0,0,0,0.25)] hover:bg-gray-50 transition-all"
+                    className="h-[46px] flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-[12px] hover:bg-gray-50 transition-all"
                   >
                     <div className="w-[18px] h-[18px] flex items-center justify-center bg-red-100 rounded-full shrink-0">
                       <span className="text-red-500 font-bold text-[11px]">G</span>
                     </div>
-                    <span className="text-[12px] font-normal text-black">Google</span>
+                    <span className="text-[13px] font-semibold text-gray-700">Google</span>
                   </button>
 
                   <button
                     type="button"
                     disabled
                     title="Segera hadir"
-                    className="h-[40px] flex items-center justify-center gap-[8px] bg-white rounded-[50px] shadow-[0px_1px_2px_rgba(0,0,0,0.25)] opacity-50 cursor-not-allowed"
+                    className="h-[46px] flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-[12px] opacity-50 cursor-not-allowed"
                   >
                     <div className="w-[18px] h-[18px] flex items-center justify-center bg-black rounded-full shrink-0">
                       <span className="text-white font-bold text-[10px]"></span>
                     </div>
-                    <span className="text-[12px] font-normal text-black">Apple</span>
+                    <span className="text-[13px] font-semibold text-gray-700">Apple</span>
                   </button>
                 </div>
               </div>
@@ -236,5 +252,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   );
 }

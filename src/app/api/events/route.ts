@@ -6,20 +6,20 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
 
-    // Query params dari frontend
-    const search   = searchParams.get('search') ?? ''
-    const category = searchParams.get('category') ?? ''
-    const is_free  = searchParams.get('is_free')
-    const featured = searchParams.get('featured')
-    const limit    = parseInt(searchParams.get('limit') ?? '20')
-    const page     = parseInt(searchParams.get('page') ?? '1')
-    const offset   = (page - 1) * limit
+    const search     = searchParams.get('search') ?? ''
+    // Support single ?category=Lomba dan multi ?categories=Lomba,Seminar
+    const category   = searchParams.get('category') ?? ''
+    const categories = searchParams.get('categories') ?? ''  // comma-separated
+    const is_free    = searchParams.get('is_free')
+    const featured   = searchParams.get('featured')
+    const limit      = Math.min(parseInt(searchParams.get('limit') ?? '20'), 50)
+    const page       = Math.max(parseInt(searchParams.get('page') ?? '1'), 1)
+    const offset     = (page - 1) * limit
 
-    // Base query — hanya ambil kolom yang diperlukan untuk card view
     let query = supabase
       .from('events')
       .select(
-        'id, title, slug, category, image_url, location, is_online, is_free, price, start_date, deadline, is_verified, is_featured, organizer_id',
+        'id, title, slug, category, image_url, location, is_online, is_free, price, start_date, end_date, deadline, is_verified, is_featured, organizer_id',
         { count: 'exact' }
       )
       .eq('is_published', true)
@@ -27,10 +27,22 @@ export async function GET(request: NextRequest) {
       .order('created_at',  { ascending: false })
       .range(offset, offset + limit - 1)
 
-    // Filter opsional
-    if (search)   query = query.ilike('title', `%${search}%`)
-    if (category) query = query.eq('category', category)
-    if (is_free  !== null && is_free  !== '') query = query.eq('is_free',   is_free  === 'true')
+    if (search) query = query.ilike('title', `%${search}%`)
+
+    // Multi-category: ?categories=Lomba,Seminar → .in('category', ['Lomba','Seminar'])
+    if (categories) {
+      const cats = categories.split(',').map(c => c.trim()).filter(Boolean)
+      if (cats.length === 1) {
+        query = query.eq('category', cats[0])
+      } else if (cats.length > 1) {
+        query = query.in('category', cats)
+      }
+    } else if (category) {
+      // backward compat — single ?category=Lomba
+      query = query.eq('category', category)
+    }
+
+    if (is_free  !== null && is_free  !== '') query = query.eq('is_free',    is_free  === 'true')
     if (featured !== null && featured !== '') query = query.eq('is_featured', featured === 'true')
 
     const { data, error, count } = await query

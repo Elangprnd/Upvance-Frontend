@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, User, LogOut, ChevronDown } from "lucide-react";
+import { Search, User, LogOut, ChevronDown, Bookmark } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -16,6 +16,16 @@ export default function Header() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/dashboard?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push("/dashboard");
+    }
+  };
 
   useEffect(() => {
     // Ambil session user saat mount
@@ -33,10 +43,20 @@ export default function Header() {
   }, []);
 
   const handleLogout = async () => {
+    // 1. Supabase signOut
     await supabase.auth.signOut();
+    
+    // 2. Hard clear cookies via API (to remove all chunks)
+    try { await fetch('/api/auth/clear', { method: 'POST' }); } catch (e) {}
+    
+    // 3. Fallback client clear
+    document.cookie.split(';').forEach(c => {
+      const name = c.split('=')[0].trim();
+      if (name.startsWith('sb-')) document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
+    });
+
     setShowDropdown(false);
-    router.push("/login");
-    router.refresh();
+    router.push("/");
   };
 
   const navLinks = [
@@ -72,14 +92,18 @@ export default function Header() {
         {/* Navigation & Search */}
         <div className="hidden md:flex flex-1 items-center justify-center gap-10">
           {/* Search Bar */}
-          <div className="relative w-full max-w-[286px]">
+          <form onSubmit={handleSearch} className="relative w-full max-w-[286px]">
             <input
               type="text"
               placeholder="Ketik acara yang dicari"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-[38px] bg-[#6d6d6d]/20 border border-[#b4b4b4] rounded-[30px] pl-11 pr-4 text-[14px] outline-none focus:ring-2 focus:ring-[#2563eb]/20"
             />
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#707070]" />
-          </div>
+            <button type="submit" className="absolute left-3.5 top-1/2 -translate-y-1/2">
+              <Search className="w-5 h-5 text-[#707070]" />
+            </button>
+          </form>
 
           {/* Nav Links */}
           <nav className="flex items-center gap-10">
@@ -148,16 +172,32 @@ export default function Header() {
                     className="fixed inset-0 z-40"
                     onClick={() => setShowDropdown(false)}
                   />
-                  <div className="absolute right-0 top-[calc(100%+8px)] bg-white border border-gray-100 rounded-[12px] shadow-lg py-1 w-[180px] z-50">
+                  <div className="absolute right-0 top-[calc(100%+8px)] bg-white border border-gray-100 rounded-[12px] shadow-lg py-1 w-[200px] z-50">
                     <div className="px-4 py-2 border-b border-gray-100">
                       <p className="text-[12px] text-gray-500">Masuk sebagai</p>
                       <p className="text-[13px] font-semibold text-gray-800 truncate">
                         {user.email}
                       </p>
                     </div>
+                    <Link
+                      href="/settings/profile"
+                      onClick={() => setShowDropdown(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      Edit Profil
+                    </Link>
+                    <Link
+                      href="/bookmarks"
+                      onClick={() => setShowDropdown(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Bookmark className="w-4 h-4" />
+                      Bookmark Saya
+                    </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-2.5 text-[13px] text-red-500 hover:bg-red-50 transition-colors"
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-[13px] text-red-500 hover:bg-red-50 transition-colors border-t border-gray-100"
                     >
                       <LogOut className="w-4 h-4" />
                       Keluar
